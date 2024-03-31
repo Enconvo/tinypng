@@ -1,0 +1,80 @@
+{
+  "$schema": "https://enconvo.com/schemas/extension.json",
+  "version": "0.0.7",
+  "author": "ysnows",
+  "license": "MIT",
+  "categories": [
+    "Image Processing"
+  ],
+  "type": "module",
+  "name": "image_compress",
+  "title": "TinyPNG",
+  "description": "Compress the selected image files with TinyPNG.",
+  "icon": "icon.png",
+  "minAppVersion": "1.4.9",
+  "commands": [
+    {
+      "name": "tinypng",
+      "title": "TinyPNG",
+      "description": "Compress the selected image files with TinyPNG.",
+      "icon": "icon.png",
+      "mode": "no-view",
+      "aiPlugin": false,
+      "params": [
+        {
+          "name": "contextFiles",
+          "description": "The files to be compressed, file path string separated by commas.",
+          "type": "string",
+          "required": true,
+          "default": ""
+        }
+      ],
+      "preferences": [
+        {
+          "title": "API Key",
+          "name": "apiKey",
+          "description": "TinyPNG API Key.",
+          "type": "password",
+          "required": true
+        },
+        {
+          "title": "Destination Folder Path",
+          "name": "destinationFolderPath",
+          "description": "Set Destination Folder path. Specify an absolute path or a relative path from the target file.",
+          "type": "textfield",
+          "required": true,
+          "default": "./compressed-images"
+        },
+        {
+          "title": "Overwrite Original Image File",
+          "name": "overwrite",
+          "description": "Whether to overwrite the original image file.",
+          "type": "checkbox",
+          "label": "Overwrite Original Image File",
+          "default": false,
+          "required": false
+        }
+      ]
+    }
+  ],
+  "dependencies": {
+    "@enconvo/api": "^0.1.0",
+    "node-fetch": "^3.2.10",
+    "zod": "^3.20.6"
+  },
+  "devDependencies": {
+    "@types/node": "^18.17.14",
+    "eslint": "^8.33.0",
+    "prettier": "^2.8.3",
+    "tsup": "^7.2.0",
+    "typescript": "^5.0.4"
+  },
+  "scripts": {
+    "lint": "eslint src",
+    "lint:fix": "npm run lint --fix",
+    "format": "prettier --write \"**/*.ts\"",
+    "format:check": "prettier --list-different \"**/*.ts\"",
+    "build": "enconvo",
+    "dev": "enconvo --dev"
+  }
+}
