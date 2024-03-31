@@ -9,3 +9,8 @@ This is a simple extension for Enconvo that allows you to compress images using 
 - Compress images using the TinyPNG API
 
 <img src="metadata/Screenshot.png" alt="alt_text" >
+
+
+# Installation
+
+https://store.enconvo.com/plugins/image_compress
