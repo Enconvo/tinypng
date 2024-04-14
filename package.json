@@ -1,6 +1,6 @@
 {
   "$schema": "https://enconvo.com/schemas/extension.json",
-  "version": "0.0.9",
+  "version": "0.0.100",
   "author": "EnconvoAI",
   "license": "MIT",
   "categories": [
