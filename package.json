@@ -58,7 +58,7 @@
     }
   ],
   "dependencies": {
-    "@enconvo/api": "^0.1.1",
+    "@enconvo/api": "^0.1.105",
     "node-fetch": "^3.2.10",
     "zod": "^3.20.6"
   },

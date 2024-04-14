@@ -8,103 +8,96 @@ import { resolveOutputPath } from "lib/utils.ts";
 import { uuid, res, ChatMessage, ActionProps, Action, Attachment, MessageContent, CoreDataChatHistory } from '@enconvo/api'
 import { mapOpenaiToLangChain } from "@enconvo/api";
 
+const chatHistory = new CoreDataChatHistory()
+
+
 export default async function main(req: Request) {
 
   const { options } = await req.json();
 
   const filePaths: string[] = (options.contextFiles || [])
 
-  try {
+  let images: MessageContent[] = []
+  filePaths.forEach((filePath) => {
 
-    const chatHistory = new CoreDataChatHistory()
-
-    let images: MessageContent[] = []
-    filePaths.forEach((filePath) => {
-
-      images.push({
-        type: "image_url",
-        image_url: {
-          url: `file://${filePath}`
-        },
-      });
-
-    })
-
-    const requestId = uuid()
-    console.log('requestId-', requestId)
-
-    await Attachment.clearAttachments()
-
-    const storeMessage = {
-      role: "user",
-      content: images
-    }
-
-    await chatHistory.addMultiModalMessage({
-      message: storeMessage,
-      customId: requestId
-    })
-
-    const contextMessage = storeMessage
-    const lcContextMessage = mapOpenaiToLangChain(contextMessage)
-    // add id to context message
-    lcContextMessage.id = requestId
-    await res.context(lcContextMessage)
-
-    const results = await Promise.all(filePaths.map((filePath) => _compressImage(filePath, options)));
-    const totalOriginalSize = results.reduce((acc, cur) => acc + cur[0].originalSize, 0);
-    const totalCompressedSize = results.reduce((acc, cur) => acc + cur[0].compressedSize, 0);
-    console.log('results', results)
-
-
-    const message: ChatMessage = {
-      role: "ai",
-      content: [
-        {
-          type: "text",
-          text: "Compression successful 🎉  (-" + (100 - (totalCompressedSize / totalOriginalSize) * 100).toFixed(1) + "%)"
-        }
-      ]
-    }
-
-
-
-    let imagePaths: string[] = []
-
-    results.forEach((result) => {
-      result.forEach((image) => {
-        imagePaths.push(image.outputPath)
-        message.content.push({
-          type: "image_url",
-          image_url: {
-            url: `file://${image.outputPath}`
-          },
-        });
-      });
+    images.push({
+      type: "image_url",
+      image_url: {
+        url: `file://${filePath}`
+      },
     });
 
-    await chatHistory.addLCMultiModalMessage({
-      message: message,
-      replyToId: requestId
-    })
+  })
 
-    const actions: ActionProps[] = [
-      Action.Paste({ files: imagePaths }, true),
-      Action.Copy({ files: imagePaths })
-    ]
+  const requestId = uuid()
 
-    await Attachment.showAttachments([])
+  await Attachment.clearAttachments()
 
-    return {
-      type: "messages",
-      messages: [message],
-      actions: actions
-    }
-
-  } catch (e) {
-    return e.message;
-
+  const storeMessage = {
+    role: "user",
+    content: images
   }
+
+  await chatHistory.addMultiModalMessage({
+    message: storeMessage,
+    customId: requestId
+  })
+
+  const contextMessage = storeMessage
+  const lcContextMessage = mapOpenaiToLangChain(contextMessage)
+  // add id to context message
+  lcContextMessage.id = requestId
+  await res.context(lcContextMessage)
+
+  const results = await Promise.all(filePaths.map((filePath) => _compressImage(filePath, options)));
+  const totalOriginalSize = results.reduce((acc, cur) => acc + cur[0].originalSize, 0);
+  const totalCompressedSize = results.reduce((acc, cur) => acc + cur[0].compressedSize, 0);
+
+
+  const message: ChatMessage = {
+    role: "ai",
+    content: [
+      {
+        type: "text",
+        text: "Compression successful 🎉  (-" + (100 - (totalCompressedSize / totalOriginalSize) * 100).toFixed(1) + "%)"
+      }
+    ]
+  }
+
+
+  let imagePaths: string[] = []
+
+  results.forEach((result) => {
+    result.forEach((image) => {
+      imagePaths.push(image.outputPath)
+      message.content.push({
+        type: "image_url",
+        image_url: {
+          url: `file://${image.outputPath}`
+        },
+      });
+    });
+  });
+
+  await chatHistory.addLCMultiModalMessage({
+    message: message,
+    replyToId: requestId
+  })
+
+  const actions: ActionProps[] = [
+    Action.Paste({ files: imagePaths }, true),
+    Action.Copy({ files: imagePaths })
+  ]
+
+  await Attachment.showAttachments([])
+
+  return {
+    type: "messages",
+    messages: [message],
+    actions: actions
+  }
+
+
 }
 
 const _compressImage = async (
@@ -123,7 +116,10 @@ const _compressImage = async (
 
   const readStream = createReadStream(filePath);
 
-  res.write("Uploading image...", true)
+  res.write({
+    content: "Uploading image...",
+    overwrite: true
+  })
   // Upload original image
   const resPost = await fetch("https://api.tinify.com/shrink", {
     method: "POST",
@@ -141,7 +137,10 @@ const _compressImage = async (
     throw new Error(resJson.message);
   }
 
-  res.write("Upload Successful! Compressing...", true)
+  res.write({
+    content: "Upload Successful! Compressing...",
+    overwrite: true
+  })
 
   // Download compressed image
   const downloadUrl = resJson.output.url;
