@@ -85,8 +85,12 @@ export default async function main(req: Request) {
   })
 
   const actions: ActionProps[] = [
-    Action.Paste({ files: imagePaths }, true),
-    Action.Copy({ files: imagePaths })
+    Action.Paste({
+      content: { files: imagePaths }
+    }),
+    Action.Copy({
+      content: { files: imagePaths }
+    })
   ]
 
   await Attachment.showAttachments([])
@@ -96,8 +100,6 @@ export default async function main(req: Request) {
     messages: [message],
     actions: actions
   }
-
-
 }
 
 const _compressImage = async (
