@@ -5,7 +5,7 @@ import fetch from "node-fetch";
 import { dirname, basename, join } from "path";
 import { compressImageResponseScheme } from "zodSchema.ts";
 import { resolveOutputPath } from "lib/utils.ts";
-import { uuid, res, ChatMessage, ActionProps, Action, Attachment, MessageContent, CoreDataChatHistory } from '@enconvo/api'
+import { uuid, res, ChatMessage, ActionProps, Action, Attachment, MessageContent, CoreDataChatHistory, ChatMessage } from '@enconvo/api'
 import { mapOpenaiToLangChain } from "@enconvo/api";
 
 const chatHistory = new CoreDataChatHistory()
@@ -19,7 +19,6 @@ export default async function main(req: Request) {
 
   let images: MessageContent[] = []
   filePaths.forEach((filePath) => {
-
     images.push({
       type: "image_url",
       image_url: {
@@ -33,8 +32,9 @@ export default async function main(req: Request) {
 
   await Attachment.clearAttachments()
 
-  const storeMessage = {
-    role: "user",
+  const storeMessage: ChatMessage = {
+    id: requestId,
+    role: "human",
     content: images
   }
 
@@ -43,11 +43,7 @@ export default async function main(req: Request) {
     customId: requestId
   })
 
-  const contextMessage = storeMessage
-  const lcContextMessage = mapOpenaiToLangChain(contextMessage)
-  // add id to context message
-  lcContextMessage.id = requestId
-  await res.context(lcContextMessage)
+  await res.context(storeMessage)
 
   const results = await Promise.all(filePaths.map((filePath) => _compressImage(filePath, options)));
   const totalOriginalSize = results.reduce((acc, cur) => acc + cur[0].originalSize, 0);
@@ -88,6 +84,7 @@ export default async function main(req: Request) {
     Action.Paste({
       content: { files: imagePaths }
     }),
+    Action.ShowInFinder({ path: imagePaths[0] }),
     Action.Copy({
       content: { files: imagePaths }
     })
