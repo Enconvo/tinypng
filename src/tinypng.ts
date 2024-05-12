@@ -5,8 +5,7 @@ import fetch from "node-fetch";
 import { dirname, basename, join } from "path";
 import { compressImageResponseScheme } from "zodSchema.ts";
 import { resolveOutputPath } from "lib/utils.ts";
-import { uuid, res, ChatMessage, ActionProps, Action, Attachment, MessageContent, CoreDataChatHistory, ChatMessage } from '@enconvo/api'
-import { mapOpenaiToLangChain } from "@enconvo/api";
+import { uuid, res, ActionProps, Action, Attachment, MessageContent, CoreDataChatHistory, ChatMessage, FinderUtil } from '@enconvo/api'
 
 const chatHistory = new CoreDataChatHistory()
 
@@ -15,7 +14,13 @@ export default async function main(req: Request) {
 
   const { options } = await req.json();
 
-  const filePaths: string[] = (options.contextFiles || [])
+  let filePaths: string[] = (options.contextFiles || [])
+
+  if (filePaths.length === 0) {
+    filePaths = await FinderUtil.getSelectedItems()
+  }
+
+  console.log('filePaths', filePaths)
 
   let images: MessageContent[] = []
   filePaths.forEach((filePath) => {
@@ -38,12 +43,13 @@ export default async function main(req: Request) {
     content: images
   }
 
+  // res.context(storeMessage)
+
   await chatHistory.addMultiModalMessage({
     message: storeMessage,
     customId: requestId
   })
 
-  await res.context(storeMessage)
 
   const results = await Promise.all(filePaths.map((filePath) => _compressImage(filePath, options)));
   const totalOriginalSize = results.reduce((acc, cur) => acc + cur[0].originalSize, 0);
@@ -148,7 +154,7 @@ const _compressImage = async (
   // Save compressed image
   let outputDir = dirname(filePath);
   console.log('preferences', preferences)
-  if (preferences.overwrite === 'false') {
+  if (!preferences.overwrite) {
     outputDir = resolveOutputPath(filePath, preferences.destinationFolderPath);
     if (!existsSync(outputDir)) {
       mkdirSync(outputDir);

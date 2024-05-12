@@ -43,7 +43,7 @@
           "description": "Set Destination Folder path. Specify an absolute path or a relative path from the target file.",
           "type": "textfield",
           "required": true,
-          "default": "./compressed-images"
+          "default": "./enconvo-compressed-images"
         },
         {
           "title": "Overwrite Original Image File",
@@ -58,16 +58,16 @@
     }
   ],
   "dependencies": {
-    "@enconvo/api": "^0.1.113",
-    "node-fetch": "^3.2.10",
-    "zod": "^3.20.6"
+    "@enconvo/api": "^0.1.128",
+    "node-fetch": "^3.3.2",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/node": "^18.17.14",
-    "eslint": "^8.33.0",
-    "prettier": "^2.8.3",
+    "@types/node": "^18.19.33",
+    "eslint": "^8.57.0",
+    "prettier": "^2.8.8",
     "tsup": "^7.2.0",
-    "typescript": "^5.0.4"
+    "typescript": "^5.4.5"
   },
   "scripts": {
     "lint": "eslint src",
